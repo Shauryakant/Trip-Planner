@@ -1,6 +1,6 @@
-import Groq from 'groq-sdk';
-import { buildGroqPromptMessages } from '@/lib/groqPrompt';
-import { validate } from '@/lib/schema';
+import Groq from "groq-sdk";
+import { buildGroqPromptMessages } from "@/lib/groqPrompt";
+import { validate } from "@/lib/schema";
 
 export const config = {
   api: {
@@ -10,23 +10,32 @@ export const config = {
 
 export default async function handler(req, res) {
   // Only accept POST requests
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ error: 'wrong_shape', message: 'Method Not Allowed' });
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
+    return res
+      .status(405)
+      .json({ error: "wrong_shape", message: "Method Not Allowed" });
   }
 
   const { description } = req.body || {};
 
-  // Validate description parameter
-  if (!description || typeof description !== 'string' || !description.trim()) {
-    return res.status(400).json({ error: 'empty', message: 'Trip description cannot be empty.' });
+  // Minimal early guard: description must exist, be a string, and be at least 3 trimmed characters
+  if (
+    !description ||
+    typeof description !== "string" ||
+    description.trim().length < 3
+  ) {
+    return res.status(400).json({
+      error: "empty",
+      message: "Trip description cannot be empty or under 3 characters.",
+    });
   }
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: 'network',
-      message: 'GROQ_API_KEY is not configured on the server.',
+      error: "network",
+      message: "GROQ_API_KEY is not configured on the server.",
     });
   }
 
@@ -36,45 +45,77 @@ export default async function handler(req, res) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-  const modelToUse = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+  const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
   try {
     const messages = buildGroqPromptMessages(description);
 
-    let completion;
-    try {
-      completion = await groq.chat.completions.create(
-        {
-          messages,
-          model: modelToUse,
-          response_format: { type: 'json_object' },
-          temperature: 0.7,
-          max_tokens: 4000,
-        },
-        {
-          signal: controller.signal,
-        }
-      );
-    } catch (primaryErr) {
-      // If primary model is not found, attempt fallback to llama-3.1-8b-instant or llama3-8b-8192
-      if (primaryErr?.status === 404 || primaryErr?.error?.code === 'model_not_found') {
-        const fallbackModel = modelToUse === 'llama-3.1-8b-instant' ? 'llama3-8b-8192' : 'llama-3.1-8b-instant';
-        completion = await groq.chat.completions.create(
-          {
-            messages,
-            model: fallbackModel,
-            response_format: { type: 'json_object' },
-            temperature: 0.7,
-            max_tokens: 4000,
+    const completion = await groq.chat.completions.create(
+      {
+        messages,
+        model: MODEL,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "trip_itinerary",
+            schema: {
+              type: "object",
+              properties: {
+                trip_title: { type: "string" },
+                days: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      day_number: { type: "number" },
+                      title: { type: "string" },
+                      stops: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string" },
+                            type: {
+                              type: "string",
+                              enum: [
+                                "activity",
+                                "food",
+                                "transport",
+                                "lodging",
+                              ],
+                            },
+                            name: { type: "string" },
+                            time: { type: "string" },
+                            description: { type: "string" },
+                          },
+                          required: [
+                            "id",
+                            "type",
+                            "name",
+                            "time",
+                            "description",
+                          ],
+                          additionalProperties: false,
+                        },
+                      },
+                    },
+                    required: ["day_number", "title", "stops"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["trip_title", "days"],
+              additionalProperties: false,
+            },
           },
-          {
-            signal: controller.signal,
-          }
-        );
-      } else {
-        throw primaryErr;
-      }
-    }
+        },
+        temperature: 0.7,
+        max_tokens: 4000,
+      },
+      {
+        signal: controller.signal,
+      },
+    );
 
     clearTimeout(timeoutId);
 
@@ -82,49 +123,58 @@ export default async function handler(req, res) {
 
     if (!rawContent || !rawContent.trim()) {
       return res.status(422).json({
-        error: 'empty',
-        message: 'Groq API returned an empty completion.',
+        error: "empty",
+        message: "Groq API returned an empty completion.",
       });
     }
 
-    // Try parsing raw JSON content
+    // Clean markdown code block wrappers if present
+    let cleanContent = rawContent
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    // Parse JSON content
     let parsedJson;
     try {
-      parsedJson = JSON.parse(rawContent);
+      parsedJson = JSON.parse(cleanContent);
+      if (typeof parsedJson === "string") {
+        parsedJson = JSON.parse(parsedJson);
+      }
     } catch (parseError) {
       return res.status(422).json({
-        error: 'malformed',
-        message: 'Groq API returned malformed JSON that could not be parsed.',
+        error: "malformed",
+        message:
+          "Something went wrong generating your itinerary. Please try again.",
       });
     }
 
-    // Strict schema validation
+    // Strict schema & business logic validation
     const validation = validate(parsedJson);
 
     if (!validation.valid) {
       return res.status(422).json({
-        error: validation.reason || 'wrong_shape',
-        message: validation.error || 'Parsed output failed schema validation.',
+        error: validation.reason || "wrong_shape",
+        message: validation.error || "Parsed output failed schema validation.",
       });
     }
 
-    // Return successfully validated trip itinerary data
     return res.status(200).json({ trip: validation.data });
-
   } catch (error) {
     clearTimeout(timeoutId);
 
-    if (error.name === 'AbortError') {
+    if (error.name === "AbortError") {
       return res.status(504).json({
-        error: 'timeout',
-        message: 'Request to Groq API timed out after 25 seconds.',
+        error: "timeout",
+        message: "Request timed out ",
       });
     }
 
-    // Handle generic Groq / network failure
-    return res.status(500).json({
-      error: 'network',
-      message: error.message || 'An error occurred while calling the Groq API.',
+    return res.status(error.status || 500).json({
+      error: "network",
+      message: error.message?.slice(0, 200) || "There was a network error",
     });
   }
 }

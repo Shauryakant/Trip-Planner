@@ -1,6 +1,6 @@
 # 🗺️ Trip Planner AI
 
-An interactive, day-by-day travel itinerary builder built with Next.js (Pages Router, JavaScript), structured Groq AI output (`json_object` mode), and pure CSS custom properties for dark mode and stop-type theming.
+An interactive, day-by-day travel itinerary builder built with Next.js (Pages Router, JavaScript), Groq AI native `json_schema` structured output, and pure CSS custom properties for dark mode and stop-type theming.
 
 ---
 
@@ -26,6 +26,7 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
    ```env
    GROQ_API_KEY=gsk_your_groq_api_key_here
    ```
+   *(Optional: You can also specify `GROQ_MODEL=openai/gpt-oss-120b` or another Groq model).*
 
 4. **Start the Development Server**:
    ```bash
@@ -39,17 +40,19 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 ## 💡 How It Works & Key Features
 
 - **Free-Form Prompt Input**: Describe any trip (e.g., *"4 days in Tokyo focusing on ramen, Akihabara electronics, and historic shrines"*).
-- **Server-Side AI Schema Validation**: The API route (`pages/api/plan-trip.js`) calls Groq (`llama-3.3-70b-versatile`) with `response_format: { type: "json_object" }`. It strictly validates the response using `lib/schema.js` before returning data to the client.
-- **Request State Machine**: Handles `idle | loading | success | error` with explicit error classifications (`malformed`, `wrong_shape`, `empty`, `timeout`, `network`).
-- **In-Flight Request Cancellation (`AbortController`)**: If a user submits a new prompt while a request is pending, the previous request is automatically aborted so stale responses can never overwrite newer data.
+- **Early Input Guard**: Bypasses API invocation for empty or ultra-short (< 3 characters) descriptions.
+- **Server-Side Groq `json_schema` Mode**: The API route (`pages/api/plan-trip.js`) calls Groq using native `json_schema` mode, constraining LLM generation to an exact JSON object shape and enum property types (`activity`, `food`, `transport`, `lodging`).
+- **Model-Based Input Adequacy Signal**: The system prompt instructs the model to return `{ "trip_title": "", "days": [] }` if an input is insufficient or non-travel related. The server validator catches `isDaysEmpty` early and returns a friendly `insufficient_input` banner rather than fabricating generic trips.
+- **Request Lifecycle State Machine**: Handles `idle | loading | success | error` with explicit error classifications (`insufficient_input`, `malformed`, `wrong_shape`, `empty`, `timeout`, `network`).
+- **In-Flight Request Cancellation (`AbortController`)**: If a user submits a new prompt while a request is pending, the previous request is immediately aborted so stale responses can never overwrite newer data.
 - **Interactive Day-by-Day Itinerary**:
-  - **Horizontal Day Tabs**: Seamlessly switch between days.
-  - **Expandable Stops**: Toggle detailed descriptions for each stop.
-  - **Stop Removal**: Remove stops with the `✕` button.
-  - **Accessible Stop Reordering**: Reorder stops within a day using `▲` and `▼` buttons. Reordering relies on stable stop UUIDs so expanded card states never scramble.
-  - **Stop Type Visual Hierarchy**: Distinct color badges and icons for `activity` (🎯), `food` (🍽️), `transport` (🚗), and `lodging` (🏨), with a fallback for unexpected types.
+  - **Horizontal Day Tabs**: Seamlessly switch between days with live stop count badges.
+  - **Click-to-Expand Stop Cards**: Click anywhere on a stop card (title, badge, time) or the `ℹ️` button to toggle its detailed description.
+  - **Stop Removal**: Delete stops instantly with the `✕` button.
+  - **Accessible Stop Reordering**: Reorder stops within a day using `▲` and `▼` buttons. Reordering operates on stable stop UUIDs so expanded card states never scramble.
+  - **Stop Type Visual Hierarchy**: Distinct color badges and icons for `activity` (🎯), `food` (🍽️), `transport` (🚗), and `lodging` (🏨).
 - **Persistence & Dark Mode**:
-  - Automatically saves itinerary state to `localStorage`.
+  - Automatically saves itinerary state to `localStorage` key `trip_planner_itinerary`.
   - Dark mode toggle using `data-theme` attribute on `<html>` and CSS custom variables, with flash-of-unstyled-theme prevention.
 
 ---
@@ -58,25 +61,29 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 
 ### 1. Server-Side API Route (`pages/api/plan-trip.js`)
 - **Security**: The `GROQ_API_KEY` is kept strictly server-side and is never exposed to the client bundle.
-- **Server-Side Validation**: Relying solely on LLM output in the client can cause unexpected crashes. By validating the model output on the server with `lib/schema.js`, we ensure only sanitized, compliant data reaches the frontend.
+- **Single Model Configuration**: Invokes Groq once using `const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'` without complex cascade heuristics, making API execution linear and simple to defend.
 - **Timeout Protection**: Implements a 25-second server timeout using `AbortController` to prevent hanging requests.
 
-### 2. Schema Validation & UUID Normalization (`lib/schema.js`)
-- Groq's `json_object` mode guarantees valid JSON syntax, but does **not** guarantee specific object keys or field types.
-- The `validate()` function checks required array structures, normalizes stop types, and auto-generates stable v4 UUIDs for any stop missing an ID. This guarantees stable React `key` bindings and predictable reordering.
+### 2. Native Groq `json_schema` Mode
+- Unlike `json_object` mode (which only guarantees valid JSON syntax), `json_schema` mode constrains token sampling during generation.
+- Enforces property types, required array structures, and enum restrictions (`['activity', 'food', 'transport', 'lodging']`) at the model output level.
 
-### 3. Client-Side AbortController Race-Condition Guard
+### 3. Model Signal & Schema Validation (`lib/schema.js`)
+- Instead of using brittle regex/word-list heuristics to classify user prompts, the model itself judges input adequacy via system prompt instructions (`{ "trip_title": "", "days": [] }`).
+- `validate()` in `lib/schema.js` checks `isDaysEmpty` early to trigger an `insufficient_input` error, while serving as defense-in-depth sanitization for fallback UUIDs.
+
+### 4. Client-Side AbortController Race-Condition Guard
 - If a user rapidly clicks "Generate" or alters their prompt, in-flight HTTP requests are immediately aborted via `controller.abort()`.
 - Abort errors are filtered in the catch block, preventing older slow API responses from overwriting newer user requests.
 
-### 4. Local State Mutations vs. API Refetching
+### 5. Local State Mutations vs. API Refetching
 - All user edits (expanding descriptions, deleting stops, reordering stops) mutate local React state (`useState`).
 - This avoids unnecessary API calls, saves token quota, and provides instant, zero-latency feedback.
 
-### 5. Up/Down Reorder Buttons vs. Drag-and-Drop
+### 6. Up/Down Reorder Buttons vs. Drag-and-Drop
 - Up/Down buttons provide 100% keyboard and screen-reader accessibility, eliminate mobile touch-drag gesture conflicts, and guarantee robust performance across all device widths.
 
-### 6. CSS Custom Properties for Theming
+### 7. CSS Custom Properties for Theming
 - Theming is controlled globally via `:root` and `[data-theme="dark"]` CSS custom variables. This eliminates component-level conditional class clutter and enables seamless theme transitions.
 
 ---
@@ -85,7 +92,7 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 
 AI tools were utilized during development for:
 - Initial scaffolding of Next.js Pages Router boilerplate and package scripts.
-- Crafting system prompt instructions for Groq's JSON mode (`lib/groqPrompt.js`).
+- Structuring system prompt JSON schemas (`lib/groqPrompt.js`).
 - Generating initial CSS design tokens for light and dark color schemes.
 
 *All application logic, schema validation algorithms, state machine handlers, and component architectures were reviewed, verified, and refined manually.*

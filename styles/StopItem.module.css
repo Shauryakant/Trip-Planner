@@ -9,6 +9,10 @@
   position: relative;
 }
 
+.clickableCard {
+  cursor: pointer;
+}
+
 .stopCard:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--border-focus);
@@ -123,6 +127,11 @@
 .iconBtn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.activeInfoBtn {
+  background-color: var(--accent-light);
+  border-color: var(--border-focus);
 }
 
 .removeBtn:hover:not(:disabled) {

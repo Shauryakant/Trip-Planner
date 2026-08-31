@@ -25,8 +25,21 @@ export default function StopItem({
     className: styles.typeDefault,
   };
 
+  const hasDescription = Boolean(stop.description && stop.description.trim());
+
+  const handleCardClick = (e) => {
+    // Prevent toggle when clicking action buttons
+    if (e.target.closest('button')) return;
+    if (hasDescription) {
+      onToggleExpand(stop.id);
+    }
+  };
+
   return (
-    <div className={styles.stopCard}>
+    <div
+      className={`${styles.stopCard} ${hasDescription ? styles.clickableCard : ''}`}
+      onClick={handleCardClick}
+    >
       <div className={styles.stopHeader}>
         <div className={styles.leftGroup}>
           <span className={`${styles.typeBadge} ${config.className}`}>
@@ -34,7 +47,9 @@ export default function StopItem({
             <span>{config.label}</span>
           </span>
           <div className={styles.stopMeta}>
-            <h4 className={styles.stopName}>{stop.name}</h4>
+            <h4 className={styles.stopName}>
+              {stop.name}
+            </h4>
             <span className={styles.stopTime}>⏰ {stop.time}</span>
           </div>
         </div>
@@ -58,14 +73,14 @@ export default function StopItem({
           >
             ▼
           </button>
-          {stop.description && (
+          {hasDescription && (
             <button
-              className={styles.iconBtn}
+              className={`${styles.iconBtn} ${isExpanded ? styles.activeInfoBtn : ''}`}
               onClick={() => onToggleExpand(stop.id)}
-              title={isExpanded ? 'Collapse details' : 'Expand details'}
-              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+              title={isExpanded ? 'Hide description' : 'View description'}
+              aria-label={isExpanded ? 'Hide description' : 'View description'}
             >
-              {isExpanded ? '▲' : 'ℹ️'}
+              ℹ️
             </button>
           )}
           <button
@@ -79,7 +94,7 @@ export default function StopItem({
         </div>
       </div>
 
-      {isExpanded && stop.description && (
+      {isExpanded && hasDescription && (
         <div className={styles.descriptionContainer}>
           {stop.description}
         </div>
