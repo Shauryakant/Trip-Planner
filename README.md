@@ -8,7 +8,7 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Shauryakant/Trip-Planner.git
    cd trip-planner
    ```
 
@@ -89,11 +89,7 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 ---
 
 ## 🤖 AI-Usage Note
-
-AI tools were utilized during development for:
-- Initial scaffolding of Next.js Pages Router boilerplate and package scripts.
-- Structuring system prompt JSON schemas (`lib/groqPrompt.js`).
-- Generating initial CSS design tokens for light and dark color schemes.
+I designed the JSON schema, error taxonomy, and validation rules up front, then used an agentic coding assistant to implement the API route, validator, and prompt template against that spec. Reviewing the generated code, I caught and fixed several real issues: a candidate-model list that included Groq models since deprecated, an over-engineered gibberish-detection heuristic that I replaced with a simpler approach (having the model itself signal insufficient input, validated through the existing schema pipeline), and a dead/unreachable validation branch left over from an earlier iteration. I wrote manual test cases for the validator (lib/schema.js) against hand-crafted payloads to confirm each error path actually fires correctly. Frontend scaffolding and CSS design tokens were also AI-assisted.
 
 *All application logic, schema validation algorithms, state machine handlers, and component architectures were reviewed, verified, and refined manually.*
 
