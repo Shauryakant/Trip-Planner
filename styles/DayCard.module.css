@@ -1,0 +1,42 @@
+.dayCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.dayTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stopCount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+}
+
+.emptyDay {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  background-color: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+}

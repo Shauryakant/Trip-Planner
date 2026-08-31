@@ -1,0 +1,103 @@
+.container {
+  margin-top: 1.5rem;
+}
+
+.headerCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.tripTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.tripStats {
+  display: flex;
+  gap: 1rem;
+}
+
+.statBadge {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tabsContainer {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  scrollbar-width: thin;
+}
+
+.tabsContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tabsContainer::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.tabBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.925rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabBtn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+.activeTab {
+  background-color: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.activeTab:hover {
+  background-color: var(--accent-hover);
+  color: #ffffff;
+  border-color: var(--accent-hover);
+}
+
+.tabStopBadge {
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 10px;
+}
+
+.tabBtn:not(.activeTab) .tabStopBadge {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+}
