@@ -36,21 +36,45 @@ export default async function handler(req, res) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
 
+  const modelToUse = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
   try {
     const messages = buildGroqPromptMessages(description);
 
-    const completion = await groq.chat.completions.create(
-      {
-        messages,
-        model: 'llama-3.3-70b-versatile',
-        response_format: { type: 'json_object' },
-        temperature: 0.7,
-        max_tokens: 4000,
-      },
-      {
-        signal: controller.signal,
+    let completion;
+    try {
+      completion = await groq.chat.completions.create(
+        {
+          messages,
+          model: modelToUse,
+          response_format: { type: 'json_object' },
+          temperature: 0.7,
+          max_tokens: 4000,
+        },
+        {
+          signal: controller.signal,
+        }
+      );
+    } catch (primaryErr) {
+      // If primary model is not found, attempt fallback to llama-3.1-8b-instant or llama3-8b-8192
+      if (primaryErr?.status === 404 || primaryErr?.error?.code === 'model_not_found') {
+        const fallbackModel = modelToUse === 'llama-3.1-8b-instant' ? 'llama3-8b-8192' : 'llama-3.1-8b-instant';
+        completion = await groq.chat.completions.create(
+          {
+            messages,
+            model: fallbackModel,
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+            max_tokens: 4000,
+          },
+          {
+            signal: controller.signal,
+          }
+        );
+      } else {
+        throw primaryErr;
       }
-    );
+    }
 
     clearTimeout(timeoutId);
 
