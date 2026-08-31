@@ -2,6 +2,14 @@
 
 An interactive, day-by-day travel itinerary builder built with Next.js (Pages Router, JavaScript), Groq AI native `json_schema` structured output, and pure CSS custom properties for dark mode and stop-type theming.
 
+🌐 **Live Deployment**: [https://trip-planner-omega-ten.vercel.app/](https://trip-planner-omega-ten.vercel.app/)
+
+---
+
+## 🎥 Video Explanation
+
+[Watch Recorded Video Demonstration & Code Walkthrough](your-video-link-here)
+
 ---
 
 ## 🚀 Setup Instructions
@@ -9,7 +17,7 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Shauryakant/Trip-Planner.git
-   cd trip-planner
+   cd Trip-Planner
    ```
 
 2. **Install dependencies**:
