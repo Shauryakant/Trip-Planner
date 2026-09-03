@@ -1,6 +1,25 @@
 import React, { useState } from 'react';
 import styles from '@/styles/TripForm.module.css';
 
+const SAMPLE_PRESETS = [
+  {
+    label: '🇯🇵 4 Days in Tokyo',
+    prompt: '4 days in Tokyo focusing on authentic ramen spots, electronics in Akihabara, historic shrines in Asakusa, and nightlife in Shinjuku',
+  },
+  {
+    label: '🇫🇷 3 Days in Paris',
+    prompt: '3 days in Paris exploring bakery breakfasts, art museums like the Louvre and Musée d\'Orsay, Eiffel Tower views, and walking along the Seine',
+  },
+  {
+    label: '🏝️ 5 Days in Bali',
+    prompt: '5 days in Bali featuring beach resort lodging, morning surf lessons, waterfall hikes in Ubud, local warung dining, and temple visits',
+  },
+  {
+    label: '🏙️ 2 Days in NYC',
+    prompt: '2 days in NYC: Broadway show, Central Park walk, pizza spots in Brooklyn, and Statue of Liberty',
+  },
+];
+
 export default function TripForm({ onSubmit, isLoading }) {
   const [description, setDescription] = useState('');
 
@@ -8,6 +27,11 @@ export default function TripForm({ onSubmit, isLoading }) {
     e.preventDefault();
     if (!description.trim() || isLoading) return;
     onSubmit(description);
+  };
+
+  const handleSelectPreset = (promptText) => {
+    if (isLoading) return;
+    setDescription(promptText);
   };
 
   return (
@@ -25,6 +49,24 @@ export default function TripForm({ onSubmit, isLoading }) {
           disabled={isLoading}
           rows={4}
         />
+
+        <div className={styles.presetSection}>
+          <span className={styles.presetLabel}>💡 Try a sample prompt:</span>
+          <div className={styles.presetGrid}>
+            {SAMPLE_PRESETS.map((preset, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={styles.presetChip}
+                onClick={() => handleSelectPreset(preset.prompt)}
+                disabled={isLoading}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className={styles.actionsRow}>
           <span className={styles.helperText}>
             Provide destinations, duration, interests, or style of travel.
