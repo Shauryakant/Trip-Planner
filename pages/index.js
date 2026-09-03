@@ -59,18 +59,21 @@ export default function Home() {
   }, []);
 
   // Sync itinerary changes to localStorage
-  useEffect(() => {
-    if (!itinerary) return;
+  const saveItineraryToStorage = (updatedItinerary) => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(itinerary));
+      if (updatedItinerary) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedItinerary));
+      } else {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      }
     } catch (e) {
       console.warn('Failed to save itinerary to localStorage:', e);
     }
-  }, [itinerary]);
+  };
 
-  // Handle Theme Toggle
+  // Toggle Theme Handler
   const handleToggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
     document.documentElement.setAttribute('data-theme', nextTheme);
     try {
@@ -80,60 +83,74 @@ export default function Home() {
     }
   };
 
-  // Main submission handler with AbortController pattern
-  const handlePlanTrip = async (description) => {
-    setLastSubmittedPrompt(description);
+  // Reset/Start New Trip Handler
+  const handleNewTrip = () => {
+    setItinerary(null);
+    setStatus('idle');
+    setErrorType(null);
+    setErrorMessage('');
+    setActiveDayIndex(0);
+    setExpandedStops({});
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch (e) {}
+  };
 
-    // Abort previous in-flight request if user submits again
+  // API Submission Handler with In-Flight Cancellation
+  const handlePlanTrip = async (descriptionText) => {
+    // 1. Cancel previous in-flight request if present
     if (activeAbortControllerRef.current) {
       activeAbortControllerRef.current.abort();
     }
 
+    // 2. Instantiate new AbortController
     const controller = new AbortController();
     activeAbortControllerRef.current = controller;
 
+    // 3. Update state machine to loading
     setStatus('loading');
     setErrorType(null);
     setErrorMessage('');
+    setLastSubmittedPrompt(descriptionText);
 
     try {
       const res = await fetch('/api/plan-trip', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: descriptionText }),
         signal: controller.signal,
       });
 
-      const data = await res.json();
+      const json = await res.json();
 
       if (!res.ok) {
-        setStatus('error');
-        setErrorType(data.error || 'network');
-        setErrorMessage(data.message || 'Failed to generate trip plan.');
-        return;
+        throw {
+          status: res.status,
+          errorType: json.error || 'network',
+          message: json.message || 'Failed to generate itinerary',
+        };
       }
 
-      if (data.trip) {
-        setItinerary(data.trip);
-        setActiveDayIndex(0);
-        setStatus('success');
-        // Auto-expand first stop of day 1 for immediate context
-        if (data.trip.days?.[0]?.stops?.[0]?.id) {
-          setExpandedStops({ [data.trip.days[0].stops[0].id]: true });
-        }
-      } else {
-        setStatus('error');
-        setErrorType('wrong_shape');
-        setErrorMessage('Server returned success response without trip data.');
-      }
+      // Success
+      setItinerary(json.trip);
+      saveItineraryToStorage(json.trip);
+      setActiveDayIndex(0);
+      setExpandedStops({});
+      setStatus('success');
     } catch (err) {
-      // Ignore AbortError caused by rapid user submissions
+      // Ignore AbortError caused by rapid user re-submission
       if (err.name === 'AbortError') {
         return;
       }
+
+      const type = err.errorType || 'network';
+      const msg = err.message || 'An unexpected error occurred. Please try again.';
+
+      setErrorType(type);
+      setErrorMessage(msg);
       setStatus('error');
-      setErrorType('network');
-      setErrorMessage(err.message || 'Network request failed.');
     } finally {
       if (activeAbortControllerRef.current === controller) {
         activeAbortControllerRef.current = null;
@@ -141,14 +158,14 @@ export default function Home() {
     }
   };
 
-  // Retry action for StatusBanner
+  // Retry handler using last prompt
   const handleRetry = () => {
     if (lastSubmittedPrompt) {
       handlePlanTrip(lastSubmittedPrompt);
     }
   };
 
-  // Local state mutation: Toggle stop expanded state
+  // Local State Mutation: Toggle expand stop description
   const handleToggleExpandStop = (stopId) => {
     setExpandedStops((prev) => ({
       ...prev,
@@ -156,60 +173,85 @@ export default function Home() {
     }));
   };
 
-  // Local state mutation: Remove stop from a specific day
+  // Local State Mutation: Remove stop
   const handleRemoveStop = (dayNumber, stopId) => {
-    setItinerary((prev) => {
-      if (!prev) return prev;
-      const updatedDays = prev.days.map((day) => {
-        if (day.day_number !== dayNumber) return day;
+    if (!itinerary) return;
+
+    const updatedDays = itinerary.days.map((day) => {
+      if (day.day_number === dayNumber) {
         return {
           ...day,
           stops: day.stops.filter((s) => s.id !== stopId),
         };
-      });
-      return { ...prev, days: updatedDays };
+      }
+      return day;
     });
+
+    const updatedItinerary = {
+      ...itinerary,
+      days: updatedDays,
+    };
+
+    setItinerary(updatedItinerary);
+    saveItineraryToStorage(updatedItinerary);
   };
 
-  // Local state mutation: Reorder stops within a day (Up/Down) using stable IDs
+  // Local State Mutation: Reorder stop (up or down)
   const handleReorderStop = (dayNumber, stopId, direction) => {
-    setItinerary((prev) => {
-      if (!prev) return prev;
-      const updatedDays = prev.days.map((day) => {
-        if (day.day_number !== dayNumber) return day;
+    if (!itinerary) return;
 
-        const stops = [...day.stops];
-        const index = stops.findIndex((s) => s.id === stopId);
-        if (index === -1) return day;
+    const updatedDays = itinerary.days.map((day) => {
+      if (day.day_number !== dayNumber) return day;
 
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= stops.length) return day;
+      const stops = [...day.stops];
+      const index = stops.findIndex((s) => s.id === stopId);
+      if (index === -1) return day;
 
-        // Swap array positions
-        const temp = stops[index];
-        stops[index] = stops[targetIndex];
-        stops[targetIndex] = temp;
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= stops.length) return day;
 
-        return { ...day, stops };
-      });
-      return { ...prev, days: updatedDays };
+      // Swap stops
+      const temp = stops[index];
+      stops[index] = stops[targetIndex];
+      stops[targetIndex] = temp;
+
+      return {
+        ...day,
+        stops,
+      };
     });
+
+    const updatedItinerary = {
+      ...itinerary,
+      days: updatedDays,
+    };
+
+    setItinerary(updatedItinerary);
+    saveItineraryToStorage(updatedItinerary);
   };
 
   return (
     <>
       <Head>
-        <title>Trip Planner AI | Day-by-Day Travel Itineraries</title>
-        <meta name="description" content="AI-powered interactive travel itinerary planner built with Next.js and Groq API" />
+        <title>TripPlanner AI | Plan Your Dream Journey</title>
+        <meta name="description" content="AI-powered interactive day-by-day travel itinerary builder built with Next.js and Groq API" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <div style={{ maxWidth: '840px', margin: '0 auto', padding: '0 1.25rem 4rem 1.25rem' }}>
-        <Navbar theme={theme} onToggleTheme={handleToggleTheme} />
+        <Navbar
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+        />
 
         <main>
-          <TripForm onSubmit={handlePlanTrip} isLoading={status === 'loading'} />
+          <TripForm
+            onSubmit={handlePlanTrip}
+            isLoading={status === 'loading'}
+            hasExistingItinerary={Boolean(itinerary)}
+            onNewTrip={handleNewTrip}
+          />
 
           <StatusBanner
             errorType={errorType}

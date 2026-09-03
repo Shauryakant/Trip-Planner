@@ -2,14 +2,15 @@ import React from 'react';
 import styles from '@/styles/StopItem.module.css';
 
 const TYPE_CONFIG = {
-  activity: { label: 'Activity', icon: '🎯', className: styles.typeActivity },
-  food: { label: 'Food', icon: '🍽️', className: styles.typeFood },
-  transport: { label: 'Transport', icon: '🚗', className: styles.typeTransport },
-  lodging: { label: 'Lodging', icon: '🏨', className: styles.typeLodging },
+  activity: { label: 'Activity', icon: '🎯', badgeClass: styles.typeActivity, accentColor: 'var(--type-activity-accent)' },
+  food: { label: 'Food', icon: '🍽️', badgeClass: styles.typeFood, accentColor: 'var(--type-food-accent)' },
+  transport: { label: 'Transport', icon: '🚗', badgeClass: styles.typeTransport, accentColor: 'var(--type-transport-accent)' },
+  lodging: { label: 'Rest', icon: '🏨', badgeClass: styles.typeLodging, accentColor: 'var(--type-lodging-accent)' },
 };
 
 export default function StopItem({
   stop,
+  indexNumber,
   isFirst,
   isLast,
   isExpanded,
@@ -22,83 +23,80 @@ export default function StopItem({
   const config = TYPE_CONFIG[typeKey] || {
     label: stop.type || 'Stop',
     icon: '📍',
-    className: styles.typeDefault,
+    badgeClass: styles.typeDefault,
+    accentColor: 'var(--type-default-accent)',
   };
 
   const hasDescription = Boolean(stop.description && stop.description.trim());
-
-  const handleCardClick = (e) => {
-    // Prevent toggle when clicking action buttons
-    if (e.target.closest('button')) return;
-    if (hasDescription) {
-      onToggleExpand(stop.id);
-    }
-  };
+  const flowDelay = `${(indexNumber - 1) * 0.07}s`;
 
   return (
     <div
-      className={`${styles.stopCard} ${hasDescription ? styles.clickableCard : ''}`}
-      onClick={handleCardClick}
+      className={styles.stopTimelineWrapper}
+      style={{
+        '--flow-delay': flowDelay,
+        '--type-accent': config.accentColor,
+      }}
     >
-      <div className={styles.stopHeader}>
-        <div className={styles.leftGroup}>
-          <span className={`${styles.typeBadge} ${config.className}`}>
+      {/* Left Time Column with Connected Timeline Node & Flow Line */}
+      <div className={styles.timelineColumn}>
+        <span className={styles.timeText}>{stop.time || 'Flexible'}</span>
+        <div className={styles.timelineDotNode} />
+        <div className={styles.timelineFlowLine} />
+      </div>
+
+      {/* Main Stop Card */}
+      <div className={styles.stopCard}>
+        <div className={styles.cardHeader}>
+          <span className={`${styles.typeBadge} ${config.badgeClass}`}>
             <span>{config.icon}</span>
             <span>{config.label}</span>
           </span>
-          <div className={styles.stopMeta}>
-            <h4 className={styles.stopName}>
-              {stop.name}
-            </h4>
-            <span className={styles.stopTime}>⏰ {stop.time}</span>
-          </div>
+          <span className={styles.stopIndexTag}>Stop {indexNumber}</span>
         </div>
 
+        <h4 className={styles.stopName}>{stop.name}</h4>
+
+        {isExpanded && hasDescription && (
+          <p className={styles.stopDescription}>{stop.description}</p>
+        )}
+
+        {/* Action Controls Bar */}
         <div className={styles.actionsGroup}>
           <button
             className={styles.iconBtn}
             onClick={() => onMoveUp(stop.id)}
             disabled={isFirst}
-            title="Move stop up"
-            aria-label="Move stop up"
+            title="Move stop earlier"
           >
-            ▲
+            ▲ Move Up
           </button>
           <button
             className={styles.iconBtn}
             onClick={() => onMoveDown(stop.id)}
             disabled={isLast}
-            title="Move stop down"
-            aria-label="Move stop down"
+            title="Move stop later"
           >
-            ▼
+            ▼ Move Down
           </button>
           {hasDescription && (
             <button
               className={`${styles.iconBtn} ${isExpanded ? styles.activeInfoBtn : ''}`}
               onClick={() => onToggleExpand(stop.id)}
-              title={isExpanded ? 'Hide description' : 'View description'}
-              aria-label={isExpanded ? 'Hide description' : 'View description'}
+              title={isExpanded ? 'Hide details' : 'View details'}
             >
-              ℹ️
+              {isExpanded ? 'ℹ️ Hide Details' : 'ℹ️ View Details'}
             </button>
           )}
           <button
             className={`${styles.iconBtn} ${styles.removeBtn}`}
             onClick={() => onRemove(stop.id)}
             title="Remove stop"
-            aria-label="Remove stop"
           >
-            ✕
+            ✕ Remove
           </button>
         </div>
       </div>
-
-      {isExpanded && hasDescription && (
-        <div className={styles.descriptionContainer}>
-          {stop.description}
-        </div>
-      )}
     </div>
   );
 }

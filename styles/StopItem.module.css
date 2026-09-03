@@ -1,121 +1,189 @@
-.stopCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.1rem;
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+.stopTimelineWrapper {
+  display: flex;
+  gap: 1.15rem;
+  position: relative;
+  margin-bottom: 1.25rem;
+  animation: slideFlowDown 0.35s ease-out both;
+  animation-delay: var(--flow-delay, 0s);
+}
+
+@keyframes slideFlowDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.timelineColumn {
+  width: 75px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 0.85rem;
   position: relative;
 }
 
-.clickableCard {
-  cursor: pointer;
+.timeBadge {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.timelineDotNode {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--type-accent, var(--accent-primary));
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 0 2px var(--type-accent, var(--accent-primary));
+  margin-top: 0.4rem;
+  margin-right: -6px;
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+
+.stopTimelineWrapper:hover .timelineDotNode {
+  transform: scale(1.3);
+}
+
+.timelineFlowLine {
+  position: absolute;
+  right: -1px;
+  top: 1.8rem;
+  bottom: -1.75rem;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--type-accent, var(--border-color)) 0%, var(--border-color) 100%);
+  z-index: 1;
+}
+
+.stopTimelineWrapper:last-child .timelineFlowLine {
+  display: none;
+}
+
+.stopCard {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-left: 5px solid var(--type-accent, var(--border-focus));
+  border-radius: var(--radius-md);
+  padding: 1.2rem 1.35rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
 }
 
 .stopCard:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--border-focus);
+  transform: translateY(-2px);
 }
 
-.stopHeader {
+.cardHeader {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.leftGroup {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex: 1;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
 .typeBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.78rem;
-  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-  border: 1px solid transparent;
+  letter-spacing: 0.04em;
 }
 
-/* Dynamic Stop Type Classes */
 .typeActivity {
-  background-color: var(--type-activity-bg);
+  background: var(--type-activity-bg);
   color: var(--type-activity-text);
-  border-color: var(--type-activity-border);
 }
 
 .typeFood {
-  background-color: var(--type-food-bg);
+  background: var(--type-food-bg);
   color: var(--type-food-text);
-  border-color: var(--type-food-border);
 }
 
 .typeTransport {
-  background-color: var(--type-transport-bg);
+  background: var(--type-transport-bg);
   color: var(--type-transport-text);
-  border-color: var(--type-transport-border);
 }
 
 .typeLodging {
-  background-color: var(--type-lodging-bg);
+  background: var(--type-lodging-bg);
   color: var(--type-lodging-text);
-  border-color: var(--type-lodging-border);
 }
 
 .typeDefault {
-  background-color: var(--type-default-bg);
+  background: var(--type-default-bg);
   color: var(--type-default-text);
-  border-color: var(--type-default-border);
 }
 
-.stopMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+.stopIndexTag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
 }
 
 .stopName {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.3;
+  margin-bottom: 0.35rem;
 }
 
-.stopTime {
-  font-size: 0.85rem;
-  font-weight: 600;
+.stopDescription {
+  font-size: 0.925rem;
   color: var(--text-secondary);
+  line-height: 1.55;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border-color);
+  animation: expandSlide 0.2s ease-out;
 }
 
+@keyframes expandSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Action Controls Bar */
 .actionsGroup {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-shrink: 0;
+  margin-top: 0.85rem;
+  flex-wrap: wrap;
 }
 
 .iconBtn {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
+  padding: 0.3rem 0.65rem;
   border-radius: var(--radius-sm);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .iconBtn:hover:not(:disabled) {
@@ -132,6 +200,11 @@
 .activeInfoBtn {
   background-color: var(--accent-light);
   border-color: var(--border-focus);
+  color: var(--accent-primary);
+}
+
+.removeBtn {
+  margin-left: auto;
 }
 
 .removeBtn:hover:not(:disabled) {
@@ -140,23 +213,19 @@
   border-color: var(--error-border);
 }
 
-.descriptionContainer {
-  margin-top: 0.85rem;
-  padding-top: 0.85rem;
-  border-top: 1px dashed var(--border-color);
-  font-size: 0.925rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  animation: expandSlide 0.2s ease-out;
-}
-
-@keyframes expandSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
+@media (max-width: 600px) {
+  .stopTimelineWrapper {
+    flex-direction: column;
+    gap: 0.35rem;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .timelineColumn {
+    width: 100%;
+    align-items: flex-start;
+  }
+  .timelineFlowLine, .timelineDotNode {
+    display: none;
+  }
+  .removeBtn {
+    margin-left: 0;
   }
 }

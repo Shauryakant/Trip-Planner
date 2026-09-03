@@ -3,24 +3,24 @@ import styles from '@/styles/TripForm.module.css';
 
 const SAMPLE_PRESETS = [
   {
-    label: '🇯🇵 4 Days in Tokyo',
-    prompt: '4 days in Tokyo focusing on authentic ramen spots, electronics in Akihabara, historic shrines in Asakusa, and nightlife in Shinjuku',
+    label: '🇮🇹 3 Days in Rome',
+    prompt: '3 days in Rome exploring Colosseum history, authentic pasta in Trastevere, Vatican museums, and gelaterias',
   },
   {
-    label: '🇫🇷 3 Days in Paris',
-    prompt: '3 days in Paris exploring bakery breakfasts, art museums like the Louvre and Musée d\'Orsay, Eiffel Tower views, and walking along the Seine',
+    label: '🇯🇵 4 Days in Kyoto',
+    prompt: '4 days in Kyoto focusing on Fushimi Inari shrine, bamboo groves in Arashiyama, matcha tea houses, and traditional ryokan lodging',
   },
   {
-    label: '🏝️ 5 Days in Bali',
-    prompt: '5 days in Bali featuring beach resort lodging, morning surf lessons, waterfall hikes in Ubud, local warung dining, and temple visits',
+    label: '🇬🇷 5 Days in Santorini',
+    prompt: '5 days in Santorini featuring Oia sunset views, red beach relaxation, local winery tours, and coastal seafood dining',
   },
   {
-    label: '🏙️ 2 Days in NYC',
-    prompt: '2 days in NYC: Broadway show, Central Park walk, pizza spots in Brooklyn, and Statue of Liberty',
+    label: '🇨🇭 4 Days in Swiss Alps',
+    prompt: '4 days in Swiss Alps exploring scenic train routes, mountain hiking, fondue dining, and alpine village lodging',
   },
 ];
 
-export default function TripForm({ onSubmit, isLoading }) {
+export default function TripForm({ onSubmit, isLoading, hasExistingItinerary, onNewTrip }) {
   const [description, setDescription] = useState('');
 
   const handleSubmit = (e) => {
@@ -34,24 +34,29 @@ export default function TripForm({ onSubmit, isLoading }) {
     setDescription(promptText);
   };
 
+  const handleReset = () => {
+    setDescription('');
+    if (onNewTrip) onNewTrip();
+  };
+
   return (
     <div className={styles.formContainer}>
       <form onSubmit={handleSubmit} className={styles.formGroup}>
         <label htmlFor="trip-description" className={styles.label}>
-          <span>✈️</span> Where would you like to travel?
+          {hasExistingItinerary ? 'Plan another trip or modify prompt' : 'Where would you like to travel?'}
         </label>
         <textarea
           id="trip-description"
           className={styles.textarea}
-          placeholder="Describe your ideal trip (e.g. 4 days in Tokyo focusing on ramen, electronics in Akihabara, historic shrines, and nightlife in Shinjuku)..."
+          placeholder="Describe your ideal trip (e.g. 4 days in Kyoto focusing on shrines, bamboo groves, matcha tea, and traditional ryokans)..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={isLoading}
-          rows={4}
+          rows={3}
         />
 
         <div className={styles.presetSection}>
-          <span className={styles.presetLabel}>💡 Try a sample prompt:</span>
+          <span className={styles.presetLabel}>💡 Try an inspiring sample prompt:</span>
           <div className={styles.presetGrid}>
             {SAMPLE_PRESETS.map((preset, idx) => (
               <button
@@ -69,24 +74,38 @@ export default function TripForm({ onSubmit, isLoading }) {
 
         <div className={styles.actionsRow}>
           <span className={styles.helperText}>
-            Provide destinations, duration, interests, or style of travel.
+            Specify duration, interests, or travel pace.
           </span>
-          <button
-            type="submit"
-            className={styles.submitBtn}
-            disabled={isLoading || !description.trim()}
-          >
-            {isLoading ? (
-              <>
-                <span className={styles.spinner} />
-                Building Itinerary...
-              </>
-            ) : (
-              <>
-                Generate Itinerary ✨
-              </>
+
+          <div className={styles.buttonsGroup}>
+            {hasExistingItinerary && (
+              <button
+                type="button"
+                className={styles.resetBtn}
+                onClick={handleReset}
+                disabled={isLoading}
+                title="Clear input and start a new trip"
+              >
+                + New trip
+              </button>
             )}
-          </button>
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={isLoading || !description.trim()}
+            >
+              {isLoading ? (
+                <>
+                  <span className={styles.spinner} />
+                  Building Itinerary...
+                </>
+              ) : (
+                <>
+                  ✦ Build my itinerary
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

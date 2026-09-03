@@ -2,42 +2,70 @@
   margin-top: 1.5rem;
 }
 
-.headerCard {
+/* Dashboard Destination Header Card */
+.dashboardCard {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.75rem 2rem;
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow-md);
+}
+
+.dashboardHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.dashboardTag {
+  font-size: 0.725rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  margin-bottom: 0.25rem;
 }
 
 .tripTitle {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.tripStats {
+.dashboardStatsRow {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color);
 }
 
-.statBadge {
+.statPill {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
   font-weight: 600;
   color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
+.highlightPill {
+  background: var(--accent-light);
+  color: var(--accent-primary);
+  border-color: var(--border-focus);
+}
+
+/* Horizontal Day Tabs */
 .tabsContainer {
   display: flex;
   gap: 0.5rem;
@@ -61,43 +89,49 @@
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   border-radius: var(--radius-md);
-  padding: 0.75rem 1.25rem;
-  font-weight: 600;
-  font-size: 0.925rem;
+  padding: 0.75rem 1.1rem;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 135px;
 }
 
 .tabBtn:hover {
   border-color: var(--border-focus);
   color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .activeTab {
   background-color: var(--accent-primary);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: var(--accent-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .activeTab:hover {
   background-color: var(--accent-hover);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: var(--accent-hover);
 }
 
-.tabStopBadge {
-  background: rgba(255, 255, 255, 0.25);
-  font-size: 0.75rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 10px;
+.tabDayNumber {
+  font-size: 0.725rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
 }
 
-.tabBtn:not(.activeTab) .tabStopBadge {
-  background: var(--bg-primary);
-  color: var(--text-secondary);
+.tabDayTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

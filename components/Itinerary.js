@@ -18,21 +18,55 @@ export default function Itinerary({
   const days = trip.days;
   const currentDay = days[activeDayIndex] || days[0];
 
-  const totalStops = days.reduce((sum, d) => sum + (d.stops ? d.stops.length : 0), 0);
+  // Calculate statistics across all days
+  let totalStops = 0;
+  const categoryCounts = { food: 0, activity: 0, transport: 0, lodging: 0 };
+
+  days.forEach((day) => {
+    if (Array.isArray(day.stops)) {
+      totalStops += day.stops.length;
+      day.stops.forEach((stop) => {
+        const type = (stop.type || 'activity').toLowerCase();
+        if (categoryCounts[type] !== undefined) {
+          categoryCounts[type]++;
+        } else {
+          categoryCounts.activity++;
+        }
+      });
+    }
+  });
 
   return (
     <div className={styles.container}>
-      <div className={styles.headerCard}>
-        <div>
-          <h2 className={styles.tripTitle}>{trip.trip_title}</h2>
+      {/* Dashboard Header Card */}
+      <div className={styles.dashboardCard}>
+        <div className={styles.dashboardHeader}>
+          <div>
+            <div className={styles.dashboardTag}>VOYAGE OVERVIEW</div>
+            <h2 className={styles.tripTitle}>{trip.trip_title}</h2>
+          </div>
         </div>
-        <div className={styles.tripStats}>
-          <span className={styles.statBadge}>
+
+        {/* Dashboard Quick Stats Row */}
+        <div className={styles.dashboardStatsRow}>
+          <span className={`${styles.statPill} ${styles.highlightPill}`}>
             📅 {days.length} {days.length === 1 ? 'Day' : 'Days'}
           </span>
-          <span className={styles.statBadge}>
+          <span className={`${styles.statPill} ${styles.highlightPill}`}>
             📍 {totalStops} Total Stops
           </span>
+          {categoryCounts.food > 0 && (
+            <span className={styles.statPill}>🍽️ {categoryCounts.food} Food</span>
+          )}
+          {categoryCounts.activity > 0 && (
+            <span className={styles.statPill}>🎯 {categoryCounts.activity} Activities</span>
+          )}
+          {categoryCounts.transport > 0 && (
+            <span className={styles.statPill}>🚗 {categoryCounts.transport} Transport</span>
+          )}
+          {categoryCounts.lodging > 0 && (
+            <span className={styles.statPill}>🏨 {categoryCounts.lodging} Rest</span>
+          )}
         </div>
       </div>
 
@@ -40,7 +74,9 @@ export default function Itinerary({
       <div className={styles.tabsContainer} role="tablist">
         {days.map((day, idx) => {
           const isActive = idx === activeDayIndex;
-          const stopCount = day.stops ? day.stops.length : 0;
+          const dayNum = day.day_number || idx + 1;
+          const dayTitle = day.title || `Day ${dayNum}`;
+
           return (
             <button
               key={day.day_number || idx}
@@ -49,8 +85,8 @@ export default function Itinerary({
               className={`${styles.tabBtn} ${isActive ? styles.activeTab : ''}`}
               onClick={() => onSelectDay(idx)}
             >
-              <span>Day {day.day_number || idx + 1}</span>
-              <span className={styles.tabStopBadge}>{stopCount}</span>
+              <span className={styles.tabDayNumber}>DAY {dayNum}</span>
+              <span className={styles.tabDayTitle}>{dayTitle.replace(/^Day\s*\d+[:\s-]*/i, '')}</span>
             </button>
           );
         })}

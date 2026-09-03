@@ -23,7 +23,8 @@ The frontend lets you browse day tabs, click anywhere on stop cards to view desc
 
 ## ✨ Features
 
-- **Free-Form Prompt Input**: Textarea input supporting any travel description, plus quick sample prompt presets (Tokyo, Paris, Bali, NYC).
+- **Free-Form Prompt Input**: Textarea input supporting any travel description, plus quick sample prompt presets (Rome, Kyoto, Santorini, Swiss Alps).
+- **Inline Reset & New Trip**: Start fresh or reset your query directly inside the form card next to `✦ Build my itinerary`.
 - **Minimal Early Guard**: Bypasses API invocation for empty or ultra-short (< 3 characters) descriptions.
 - **Server-Side Groq `json_schema` Mode**: Calls Groq API using native `json_schema` mode to enforce JSON object shape and enum property types (`activity`, `food`, `transport`, `lodging`) at generation time.
 - **Model-Based Input Adequacy Signal**: The system prompt instructs the model to return `{ "trip_title": "", "days": [] }` if an input is insufficient or non-travel related. The server validator catches `isDaysEmpty` early and returns a friendly `insufficient_input` banner rather than fabricating generic trips.
@@ -31,10 +32,11 @@ The frontend lets you browse day tabs, click anywhere on stop cards to view desc
 - **In-Flight Request Cancellation (`AbortController`)**: If a user submits a new prompt while a request is pending, the previous request is immediately aborted so stale responses can never overwrite newer data.
 - **Interactive Day-by-Day Itinerary**:
   - **Horizontal Day Tabs**: Switch between days with live stop count badges.
+  - **Connected Vertical Timeline Flow**: Visual flow line and staggered slide-down entrance animations connecting stops in sequence.
   - **Click-to-Expand Stop Cards**: Click anywhere on a stop card (title, badge, time) or the `ℹ️` button to toggle detailed descriptions.
   - **Stop Removal**: Delete stops instantly with the `✕` button.
-  - **Accessible Stop Reordering**: Reorder stops within a day using `▲` and `▼` buttons operating on stable UUIDs so expanded card states never scramble.
-  - **Stop Type Visual Hierarchy**: Distinct color badges and icons for `activity` (🎯), `food` (🍽️), `transport` (🚗), and `lodging` (🏨).
+  - **Accessible Stop Reordering**: Reorder stops within a day using `▲ Move Up` and `▼ Move Down` buttons operating on stable UUIDs so expanded card states never scramble.
+  - **Stop Type Visual Hierarchy**: Type-colored left border accents and badges for `activity` (🎯), `food` (🍽️), `transport` (🚗), and `lodging` (🏨).
 - **Persistence & Dark Mode**:
   - Automatically saves itinerary state to `localStorage` key `trip_planner_itinerary`.
   - Dark mode toggle using `data-theme` attribute on `<html>` and CSS custom variables, with flash-of-unstyled-theme prevention script in `pages/_document.js`.
