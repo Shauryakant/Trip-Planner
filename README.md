@@ -9,9 +9,16 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
 
 ## 🎥 Video Explanation
 
-<a href="https://youtu.be/XfXeIGaY-EA" target="_blank">
-   <img src="https://shields.io▶_Watch_Demo_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch the Demo" width="240" height="50" />
-</a>
+
+<p align="center">
+  <a href="https://youtu.be/XfXeIGaY-EA" target="_blank">
+    <img
+      src="https://img.youtube.com/vi/XfXeIGaY-EA/0.jpg"
+      alt="Trip Planner AI Demo"
+      width="700"
+    />
+  </a>
+</p>
 
 
 ## 📖 Overview
