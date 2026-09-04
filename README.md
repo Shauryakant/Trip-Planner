@@ -19,6 +19,7 @@ An interactive, day-by-day travel itinerary builder built with Next.js (Pages Ro
     />
   </a>
 </p>
+Click on the image to view demo video
 
 
 ## 📖 Overview
